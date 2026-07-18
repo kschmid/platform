@@ -62,6 +62,35 @@ public class DomParserTest {
     }
 
     /**
+     * Tests external {@code HasTypeDefinition} resolution for a root variable.
+     *
+     * @throws IOException shall not occur
+     */
+    @Test
+    public void testExternalRootVariableTypeDefinition() throws IOException {
+        File in = new File("src/test/resources/NodeSets/Opc.Ua.ExternalRootVariable.NodeSet2.xml");
+        Assert.assertTrue(in.exists());
+        File tmp = new File("target/tmp");
+        tmp.mkdirs();
+        File gen = new File("target/gen");
+        gen.mkdirs();
+        File out = new File(gen, "OpcExternalRootVariable.ivml");
+        if (out.exists()) {
+            out.delete();
+        }
+
+        DomParser.setDefaultVerbose(false);
+        DomParser.setUsingIvmlFolder("target/tmp");
+        DomParser.main(new String[] {in.toString()});
+
+        Assert.assertTrue(out.exists());
+        Charset charset = Charset.forName("UTF-8");
+        String outContents = normalize(FileUtils.readFileToString(out, charset));
+        Assert.assertTrue(outContents.contains("UAVariableTypeType opcExternalMeasurementValueTypeType"));
+        Assert.assertTrue(outContents.contains("typeDefinition = refBy(opcExternalMeasurementValueTypeType)"));
+    }
+
+    /**
      * Tests {@link DomParser} on the woodworking companion spec XML.
      * 
      * @throws IOException shall not occur

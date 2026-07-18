@@ -555,7 +555,7 @@ public class DomParser {
                         if (type == ElementType.ROOTOBJECT || type == ElementType.SUBOBJECT) {
                             typeList = documents[i].getElementsByTagName("UAObjectType");
                             type = ElementType.OBJECTTYPE;
-                        } else if (type == ElementType.FIELDVARIABLE) {
+                        } else if (type == ElementType.FIELDVARIABLE || type == ElementType.ROOTVARIABLE) {
                             typeList = documents[i].getElementsByTagName("UAVariableType");
                             type = ElementType.VARIABLETYPE;
                         }
