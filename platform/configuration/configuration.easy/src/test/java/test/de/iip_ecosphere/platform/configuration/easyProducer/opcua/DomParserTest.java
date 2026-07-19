@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import de.iip_ecosphere.platform.configuration.easyProducer.opcua.parser.DomParser;
 import de.iip_ecosphere.platform.support.FileUtils;
+import de.iip_ecosphere.platform.support.commons.Commons;
 
 /**
  * Tests {@link DomParser}.
@@ -40,18 +41,53 @@ public class DomParserTest {
         Assert.assertTrue(in.exists());
         File tmp = new File("target/tmp");
         tmp.mkdirs();
-        File out = new File(tmp, "OpcMachineTool.ivml");
+        File gen = new File("target/gen");
+        gen.mkdirs();
+        File out = new File(gen, "OpcMachineTool.ivml");
+        if (out.exists()) {
+            out.delete();
+        }
         // implicit from in to out
         DomParser.setDefaultVerbose(false); // reduce output
         DomParser.setUsingIvmlFolder("target/tmp");
         DomParser.main(new String[] {in.toString()});
-        DomParser.process(in, "MachineTool", out, false);
+        Assert.assertNotNull(Commons.getInstance());
+        Assert.assertTrue(out.exists());
         
         Charset charset = Charset.forName("UTF-8");
         File expected = new File("src/test/resources/OpcMachineTool.ivml");
         String exContents = normalize(FileUtils.readFileToString(expected, charset));
         String outContents = normalize(FileUtils.readFileToString(out, charset));
         Assert.assertEquals(exContents, outContents);
+    }
+
+    /**
+     * Tests external {@code HasTypeDefinition} resolution for a root variable.
+     *
+     * @throws IOException shall not occur
+     */
+    @Test
+    public void testExternalRootVariableTypeDefinition() throws IOException {
+        File in = new File("src/test/resources/NodeSets/Opc.Ua.ExternalRootVariable.NodeSet2.xml");
+        Assert.assertTrue(in.exists());
+        File tmp = new File("target/tmp");
+        tmp.mkdirs();
+        File gen = new File("target/gen");
+        gen.mkdirs();
+        File out = new File(gen, "OpcExternalRootVariable.ivml");
+        if (out.exists()) {
+            out.delete();
+        }
+
+        DomParser.setDefaultVerbose(false);
+        DomParser.setUsingIvmlFolder("target/tmp");
+        DomParser.main(new String[] {in.toString()});
+
+        Assert.assertTrue(out.exists());
+        Charset charset = Charset.forName("UTF-8");
+        String outContents = normalize(FileUtils.readFileToString(out, charset));
+        Assert.assertTrue(outContents.contains("UAVariableTypeType opcExternalMeasurementValueTypeType"));
+        Assert.assertTrue(outContents.contains("typeDefinition = refBy(opcExternalMeasurementValueTypeType)"));
     }
 
     /**

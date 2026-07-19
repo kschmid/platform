@@ -21,6 +21,10 @@ import org.xml.sax.SAXException;
 
 import de.iip_ecosphere.platform.configuration.easyProducer.opcua.data.*;
 import de.iip_ecosphere.platform.support.StringUtils;
+import de.iip_ecosphere.platform.support.commons.Commons;
+import de.iip_ecosphere.platform.support.commons.CommonsProviderDescriptor;
+import de.iip_ecosphere.platform.support.plugins.CurrentClassloaderPluginSetupDescriptor;
+import de.iip_ecosphere.platform.support.plugins.PluginManager;
 
 /**
  * Denotes the OPC UA element types.
@@ -551,7 +555,7 @@ public class DomParser {
                         if (type == ElementType.ROOTOBJECT || type == ElementType.SUBOBJECT) {
                             typeList = documents[i].getElementsByTagName("UAObjectType");
                             type = ElementType.OBJECTTYPE;
-                        } else if (type == ElementType.FIELDVARIABLE) {
+                        } else if (type == ElementType.FIELDVARIABLE || type == ElementType.ROOTVARIABLE) {
                             typeList = documents[i].getElementsByTagName("UAVariableType");
                             type = ElementType.VARIABLETYPE;
                         }
@@ -1454,10 +1458,12 @@ public class DomParser {
      * @param args command line arguments (ignored)
      */
     public static void main(String[] args) {
+        ensureCommons();
         File file;
         ArrayList<File> files = new ArrayList<File>();
         if (args.length == 1) {
             file = new File(args[0]);
+            files.add(file);
         } else {
             File baseDir = new File("src/main/resources/NodeSets/");
             files.add(new File(baseDir, "Opc.Ua.Woodworking.NodeSet2.xml"));
@@ -1559,6 +1565,20 @@ public class DomParser {
             process(file, fileName, ivmlFile, verboseDefault);
         }
         Collector.informationToExcel();
+    }
+
+    /**
+     * Ensures that platform commons plugins are available for command line execution.
+     */
+    private static void ensureCommons() {
+        PluginManager.registerPlugin(CurrentClassloaderPluginSetupDescriptor.INSTANCE);
+        if (null == Commons.getInstance()) {
+            Commons commons = PluginManager.getPluginInstance(Commons.class, CommonsProviderDescriptor.class);
+            if (null == commons) {
+                throw new IllegalStateException("No Commons provider is available on the runtime classpath");
+            }
+            Commons.setInstance(commons);
+        }
     }
     // checkstyle: resume method length check
 
