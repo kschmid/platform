@@ -214,6 +214,7 @@
     <dependency>
       <artifactId>support.commons-apache</artifactId>
       <groupId>de.iip-ecosphere.platform</groupId>
+      <scope>runtime</scope>
       <version>${project.version}</version>
     </dependency>
     <dependency>
