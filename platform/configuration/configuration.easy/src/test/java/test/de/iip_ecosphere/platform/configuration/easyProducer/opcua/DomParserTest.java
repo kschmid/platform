@@ -87,7 +87,17 @@ public class DomParserTest {
         Charset charset = Charset.forName("UTF-8");
         String outContents = normalize(FileUtils.readFileToString(out, charset));
         Assert.assertTrue(outContents.contains("UAVariableTypeType opcExternalMeasurementValueTypeType"));
+        Assert.assertTrue(outContents.contains("nodeId = {nameSpaceIndex = 2, identifier = 2001}"));
         Assert.assertTrue(outContents.contains("typeDefinition = refBy(opcExternalMeasurementValueTypeType)"));
+        Assert.assertTrue(outContents.contains("UARootVariableType opcSyntheticRootTypePressure"));
+        Assert.assertTrue(outContents.contains("nodeId = {nameSpaceIndex = 1, identifier = 6001}"));
+        Assert.assertTrue(outContents.contains("optional = true,"));
+        Assert.assertTrue(outContents.contains("type = refBy(FloatType),"));
+        Assert.assertTrue(outContents.contains("rootParent = refBy(opcSyntheticRootType)"));
+        Assert.assertTrue(outContents.contains("UARootVariableType opcSyntheticRootTypeTemperature"));
+        Assert.assertTrue(outContents.contains("nodeId = {nameSpaceIndex = 1, identifier = 6002}"));
+        Assert.assertTrue(outContents.contains("optional = false,"));
+        Assert.assertTrue(outContents.contains("type = refBy(DoubleType),"));
     }
 
     /**

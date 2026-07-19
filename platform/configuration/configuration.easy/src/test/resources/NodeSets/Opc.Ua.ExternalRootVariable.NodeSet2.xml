@@ -25,6 +25,15 @@
       ParentNodeId="ns=1;i=1001" DataType="Float" AccessLevel="3">
     <DisplayName>Pressure</DisplayName>
     <References>
+      <Reference ReferenceType="HasModellingRule">i=80</Reference>
+      <Reference ReferenceType="HasTypeDefinition">ns=2;i=2001</Reference>
+    </References>
+  </UAVariable>
+  <UAVariable NodeId="ns=1;i=6002" BrowseName="1:Temperature"
+      ParentNodeId="ns=1;i=1001" DataType="Double" AccessLevel="3">
+    <DisplayName>Temperature</DisplayName>
+    <References>
+      <Reference ReferenceType="HasModellingRule">i=78</Reference>
       <Reference ReferenceType="HasTypeDefinition">ns=2;i=2001</Reference>
     </References>
   </UAVariable>
