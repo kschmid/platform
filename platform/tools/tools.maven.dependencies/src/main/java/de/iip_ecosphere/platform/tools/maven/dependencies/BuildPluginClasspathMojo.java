@@ -97,17 +97,27 @@ public class BuildPluginClasspathMojo extends BuildClasspathMojo {
      * @return the relative target directory
      */
     private String getRelTargetDirectory() {
+        return getRelTargetDirectory(getProject().getBasedir(), targetDirectory);
+    }
+
+    /**
+     * Returns the target directory relative to the owning Maven project.
+     *
+     * @param projectDirectory the Maven project directory
+     * @param targetDirectory the target directory
+     * @return the relative target directory, or the target directory name if it is outside the project
+     */
+    static String getRelTargetDirectory(File projectDirectory, File targetDirectory) {
         String result = targetDirectory.getName(); // often but not always
-        File home = new File(System.getProperty("user.dir"));
-        String homePath = home.getAbsolutePath();
+        String projectPath = projectDirectory.getAbsolutePath();
         String targetPath = targetDirectory.getAbsolutePath();
         try {
-            homePath = home.getCanonicalPath();
+            projectPath = projectDirectory.getCanonicalPath();
             targetPath = targetDirectory.getCanonicalPath();
         } catch (IOException e) {
         }
-        if (targetPath.startsWith(homePath)) {
-            result = targetPath.substring(homePath.length() + 1);
+        if (targetPath.startsWith(projectPath + File.separator)) {
+            result = targetPath.substring(projectPath.length() + 1);
         }
         return result;
     }
