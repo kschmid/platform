@@ -15,6 +15,7 @@ package test.de.iip_ecosphere.platform.configuration.easyProducer.opcua;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,6 +29,51 @@ import de.iip_ecosphere.platform.support.FileUtils;
  * @author Holger Eichelberger, SSE
  */
 public class DomParserTest {
+
+    /**
+     * Tests that no arguments retain the bundled default input set.
+     */
+    @Test
+    public void testDefaultInputs() {
+        File[] inputs = DomParser.selectInputFiles(new String[0]);
+
+        Assert.assertEquals(61, inputs.length);
+        Assert.assertEquals(new File("src/main/resources/NodeSets/Opc.Ua.Woodworking.NodeSet2.xml"), inputs[0]);
+        Assert.assertEquals(new File("src/main/resources/NodeSets/Opc.Ua.Machinery.NodeSet2.xml"),
+            inputs[inputs.length - 1]);
+    }
+
+    /**
+     * Tests that one explicit input is processed.
+     *
+     * @throws IOException shall not occur
+     */
+    @Test
+    public void testExplicitInput() throws IOException {
+        File in = new File("src/test/resources/NodeSets/Opc.Ua.MachineTool.NodeSet2.xml");
+        File out = new File("target/gen/OpcMachineTool.ivml");
+        out.getParentFile().mkdirs();
+        Files.deleteIfExists(out.toPath());
+        DomParser.setDefaultVerbose(false);
+        DomParser.setUsingIvmlFolder("target/tmp");
+
+        DomParser.main(new String[] {in.toString()});
+
+        Assert.assertTrue(out.isFile());
+    }
+
+    /**
+     * Tests that explicit inputs are selected exactly once in caller order.
+     */
+    @Test
+    public void testExplicitInputOrder() {
+        File first = new File("src/test/resources/NodeSets/Opc.Ua.Woodworking.NodeSet2.xml");
+        File second = new File("src/test/resources/NodeSets/Opc.Ua.MachineTool.NodeSet2.xml");
+
+        File[] inputs = DomParser.selectInputFiles(new String[] {first.toString(), second.toString()});
+
+        Assert.assertArrayEquals(new File[] {first, second}, inputs);
+    }
     
     /**
      * Tests {@link DomParser} on the machine tool companion spec XML.
@@ -44,7 +90,6 @@ public class DomParserTest {
         // implicit from in to out
         DomParser.setDefaultVerbose(false); // reduce output
         DomParser.setUsingIvmlFolder("target/tmp");
-        DomParser.main(new String[] {in.toString()});
         DomParser.process(in, "MachineTool", out, false);
         
         Charset charset = Charset.forName("UTF-8");

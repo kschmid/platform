@@ -1449,15 +1449,17 @@ public class DomParser {
     // checkstyle: stop method length check
 
     /**
-     * Executes the parser, per default in verbose mode.
+     * Selects the input files. [public for testing]
      * 
-     * @param args command line arguments (ignored)
+     * @param args command line arguments
+     * @return the input files in processing order
      */
-    public static void main(String[] args) {
-        File file;
+    public static File[] selectInputFiles(String[] args) {
         ArrayList<File> files = new ArrayList<File>();
-        if (args.length == 1) {
-            file = new File(args[0]);
+        if (args.length > 0) {
+            for (String argument : args) {
+                files.add(new File(argument));
+            }
         } else {
             File baseDir = new File("src/main/resources/NodeSets/");
             files.add(new File(baseDir, "Opc.Ua.Woodworking.NodeSet2.xml"));
@@ -1547,8 +1549,16 @@ public class DomParser {
             //files.add(new File(baseDir, "Opc.Ua.Gds.NodeSet2.xml"));
             files.add(new File(baseDir, "Opc.Ua.Machinery.NodeSet2.xml"));
         }
-        for (File f : files) {
-            file = f;
+        return files.toArray(new File[files.size()]);
+    }
+
+    /**
+     * Executes the parser, using the bundled input set if no arguments are given.
+     *
+     * @param args explicit input files, or no arguments for the bundled input set
+     */
+    public static void main(String[] args) {
+        for (File file : selectInputFiles(args)) {
             String fileName = file.getName();
             fileName = StringUtils.removeStart(fileName, "Opc.Ua");
             fileName = StringUtils.removeEnd(fileName, ".xml");
