@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
+import org.xml.sax.SAXException;
 
 import de.iip_ecosphere.platform.configuration.easyProducer.opcua.parser.DomParser;
 import de.iip_ecosphere.platform.support.FileUtils;
@@ -182,6 +183,28 @@ public class DomParserTest {
         assertInvalidInput("OPC UA NodeSet input does not exist: " + missing,
             input.toString(), missing.toString());
         Assert.assertFalse(out.exists());
+    }
+
+    /**
+     * Tests that checked XML parser errors propagate to the caller.
+     *
+     * @throws IOException shall not occur
+     */
+    @Test
+    public void testParserErrorPropagation() throws IOException {
+        File tmp = new File("target/tmp");
+        tmp.mkdirs();
+        File invalid = File.createTempFile("invalid-opcua-input-", ".xml", tmp);
+        Files.write(invalid.toPath(), "<invalid>".getBytes(Charset.forName("UTF-8")));
+        try {
+            DomParser.main(new String[] {invalid.toString()});
+            Assert.fail("Expected malformed XML input to be rejected");
+        } catch (IllegalArgumentException e) {
+            Assert.assertTrue(e.getMessage().contains(invalid.toString()));
+            Assert.assertTrue(e.getCause() instanceof SAXException);
+        } finally {
+            Files.deleteIfExists(invalid.toPath());
+        }
     }
 
     /**
