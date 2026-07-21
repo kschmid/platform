@@ -2,6 +2,10 @@ package de.iip_ecosphere.platform.configuration.easyProducer.opcua.parser;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -1449,16 +1453,40 @@ public class DomParser {
     // checkstyle: stop method length check
 
     /**
-     * Selects the input files. [public for testing]
+     * Selects the input files. Explicit inputs are validated as a complete set before processing. Duplicate inputs are
+     * identified by their absolute normalized path without resolving symbolic links. [public for testing]
      * 
      * @param args command line arguments
      * @return the input files in processing order
+     * @throws IllegalArgumentException if an explicit input is invalid or duplicated
      */
     public static File[] selectInputFiles(String[] args) {
         ArrayList<File> files = new ArrayList<File>();
         if (args.length > 0) {
+            Set<Path> inputPaths = new HashSet<Path>();
             for (String argument : args) {
-                files.add(new File(argument));
+                if (argument == null) {
+                    throw new IllegalArgumentException("OPC UA NodeSet input must not be null");
+                }
+                final Path path;
+                try {
+                    path = Paths.get(argument);
+                } catch (InvalidPathException e) {
+                    throw new IllegalArgumentException("Invalid OPC UA NodeSet input path: " + argument, e);
+                }
+                if (!Files.exists(path)) {
+                    throw new IllegalArgumentException("OPC UA NodeSet input does not exist: " + argument);
+                }
+                if (!Files.isRegularFile(path)) {
+                    throw new IllegalArgumentException("OPC UA NodeSet input is not a regular file: " + argument);
+                }
+                if (!Files.isReadable(path)) {
+                    throw new IllegalArgumentException("OPC UA NodeSet input is not readable: " + argument);
+                }
+                if (!inputPaths.add(path.toAbsolutePath().normalize())) {
+                    throw new IllegalArgumentException("Duplicate OPC UA NodeSet input: " + argument);
+                }
+                files.add(path.toFile());
             }
         } else {
             File baseDir = new File("src/main/resources/NodeSets/");

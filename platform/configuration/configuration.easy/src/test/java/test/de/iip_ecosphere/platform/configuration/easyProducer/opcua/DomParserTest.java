@@ -18,6 +18,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 
 import de.iip_ecosphere.platform.configuration.easyProducer.opcua.parser.DomParser;
@@ -122,6 +123,80 @@ public class DomParserTest {
         String exContents = normalize(FileUtils.readFileToString(expected, charset));
         String outContents = normalize(FileUtils.readFileToString(out, charset));
         Assert.assertEquals(exContents, outContents);
+    }
+
+    /**
+     * Tests explicit input validation.
+     *
+     * @throws IOException shall not occur
+     */
+    @Test
+    public void testInvalidInputs() throws IOException {
+        File tmp = new File("target/tmp");
+        tmp.mkdirs();
+        File missing = new File(tmp, "missing-opcua-input.xml");
+        Files.deleteIfExists(missing.toPath());
+        assertInvalidInput("OPC UA NodeSet input does not exist: " + missing, missing.toString());
+        assertInvalidInput("OPC UA NodeSet input is not a regular file: " + tmp, tmp.toString());
+
+        File input = new File("src/test/resources/NodeSets/Opc.Ua.MachineTool.NodeSet2.xml");
+        String duplicate = new File(input.getParentFile(), "." + File.separator + input.getName()).toString();
+        assertInvalidInput("Duplicate OPC UA NodeSet input: " + duplicate, input.toString(), duplicate);
+    }
+
+    /**
+     * Tests rejection of an unreadable explicit input where file permissions support it.
+     *
+     * @throws IOException shall not occur
+     */
+    @Test
+    public void testUnreadableInput() throws IOException {
+        File tmp = new File("target/tmp");
+        tmp.mkdirs();
+        File unreadable = File.createTempFile("unreadable-opcua-input-", ".xml", tmp);
+        boolean permissionsChanged = unreadable.setReadable(false, false);
+        try {
+            Assume.assumeTrue(permissionsChanged && !Files.isReadable(unreadable.toPath()));
+            assertInvalidInput("OPC UA NodeSet input is not readable: " + unreadable, unreadable.toString());
+        } finally {
+            unreadable.setReadable(true, false);
+            Files.deleteIfExists(unreadable.toPath());
+        }
+    }
+
+    /**
+     * Tests that all explicit inputs are validated before processing begins.
+     *
+     * @throws IOException shall not occur
+     */
+    @Test
+    public void testInputPreflight() throws IOException {
+        File out = new File("target/gen/OpcMachineTool.ivml");
+        File missing = new File("target/tmp/missing-opcua-input.xml");
+        out.getParentFile().mkdirs();
+        missing.getParentFile().mkdirs();
+        Files.deleteIfExists(out.toPath());
+        Files.deleteIfExists(missing.toPath());
+
+        File input = new File("src/test/resources/NodeSets/Opc.Ua.MachineTool.NodeSet2.xml");
+        assertInvalidInput("OPC UA NodeSet input does not exist: " + missing,
+            input.toString(), missing.toString());
+        Assert.assertFalse(out.exists());
+    }
+
+    /**
+     * Asserts that input selection fails with the expected diagnostic.
+     *
+     * @param expectedMessage the expected diagnostic
+     * @param args the parser arguments
+     */
+    private static void assertInvalidInput(String expectedMessage, String... args) {
+        try {
+            DomParser.main(args);
+            Assert.fail("Expected invalid input to be rejected");
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(expectedMessage, e.getMessage());
+        }
     }
 
     /**
